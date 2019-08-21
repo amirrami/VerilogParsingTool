@@ -41,10 +41,10 @@ class mainWindow(QMainWindow):
     def file_open(self):
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
-        #fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.vs)", options=options)
+        #fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.sv)", options=options)
         #if fileName:
         try:
-            VFile = open("/home/amir/Downloads/addsub_v/addsub.vs",'r')
+            VFile = open("/home/amir/Downloads/addsub_v/addsub.sv",'r')
         except IOError:
             QMessageBox.warning(self, 'Can Not Open File', "Please Make Sure The the File Is Not Corrupted!!")
         else:

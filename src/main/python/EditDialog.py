@@ -81,7 +81,11 @@ class EditDialog(QMainWindow):
     def uiSetup(self):
         self.setupParameterCommentsBox()
         self.setupParameterValueBox()
-        outerGroupBox = QGroupBox("Parameter List Of Module")
+        if self.verilogFile.isTestBench:
+            gruopBoxString = "Test Bench " + self.verilogFile.moduleName
+        else:
+            gruopBoxString = "Parameter List Of Module " + self.verilogFile.moduleName
+        outerGroupBox = QGroupBox(gruopBoxString)
         #saveAll button and defaultAll button in innerLayout
         vboxInner = QVBoxLayout()
         vboxInner.addWidget(self.parameterList.defaultAllButton)

@@ -7,17 +7,24 @@ class VerilogFile():
     def __init__(self,file):
         self.VFile = file
         self.verilogLines = []
+        self.verilogText = ""
         self.verilogParameters = []
         self.parametersLineIndexes = []
         self.commentsList = []
+        self.isTestBench = False
         self.readAndParse()
 
     def readAndParse(self):
-        print(self.VFile , "\tOpened")
         self.verilogLines = self.VFile.readlines()
+        self.VFile = open(self.VFile.name,'r')
+        self.verilogText = self.VFile.read()
         self.VFile.close()
-        self.parser = Parser(self.verilogLines)
-        self.verilogParameters , self.parametersLineIndexes,self.commentsList = self.parser.parserOutput()
+        self.parser = Parser(self.verilogLines,self.verilogText)
+        self.verilogParameters = self.parser.getParameters()
+        self.parametersLineIndexes = self.parser.getLineIndexes()
+        self.commentsList = self.parser.getCommentList()
+        self.moduleName = self.parser.getModuleName()
+        self.isTestBench = self.parser.getModuleType()
         self.openDialog()
         
     def openDialog(self):
@@ -26,7 +33,8 @@ class VerilogFile():
 
     def ChangeParameter(self,parameter):
         editedLine = self.verilogLines[parameter.lineIndex]
-        editedLine = editedLine.replace(parameter.currentValue,parameter.newValue)
+        #editedLine = editedLine.replace(parameter.currentValue,parameter.newValue)
+        editedLine = re.sub(parameter.name+"\s*=\s*"+parameter.currentValue,parameter.name+" = "+parameter.newValue,editedLine)
         self.verilogLines[parameter.lineIndex] = editedLine
 
     def ChangeComment(self,parameter):
