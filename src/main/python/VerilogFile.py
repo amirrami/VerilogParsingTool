@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMessageBox
 from verilogParser import Parser
-from EditDialog import EditDialog,Parameter,ParametersList
+from EditDialog import EditDialog,Parameter
 import re
 
 class VerilogFile():
@@ -8,9 +8,10 @@ class VerilogFile():
         self.VFile = file
         self.verilogLines = []
         self.verilogText = ""
-        self.verilogParameters = []
-        self.parametersLineIndexes = []
-        self.commentsList = []
+        self.verilogParameters = [[{'I1test':"15",'I1test1':"20"}],[{'I2test':"3'b",'I2test1':'2'}]]
+        self.parametersLineIndexes = [[1,2],[3,5]]
+        self.commentsList = [['das','dsad'],['qeq','eqw']]
+        self.instanceList = []
         self.isTestBench = False
         self.readAndParse()
 
@@ -25,6 +26,7 @@ class VerilogFile():
         self.commentsList = self.parser.getCommentList()
         self.moduleName = self.parser.getModuleName()
         self.isTestBench = self.parser.getModuleType()
+        self.instanceList = self.parser.getInstancesList()
         self.openDialog()
         
     def openDialog(self):
@@ -33,8 +35,7 @@ class VerilogFile():
 
     def ChangeParameter(self,parameter):
         editedLine = self.verilogLines[parameter.lineIndex]
-        #editedLine = editedLine.replace(parameter.currentValue,parameter.newValue)
-        editedLine = re.sub(parameter.name+"\s*=\s*"+parameter.currentValue,parameter.name+" = "+parameter.newValue,editedLine)
+        editedLine = re.sub(parameter.currentValue,parameter.newValue,editedLine)
         self.verilogLines[parameter.lineIndex] = editedLine
 
     def ChangeComment(self,parameter):
@@ -61,7 +62,7 @@ class VerilogFile():
                 self.verilogLines[parameter.lineIndex] = editedLine
         else:
             editedLine = self.verilogLines[parameter.lineIndex]
-            editedLine = editedLine.replace(parameter.currentComment,parameter.newComment)
+            editedLine = re.sub(parameter.currentComment,parameter.newComment,editedLine)
             self.verilogLines[parameter.lineIndex] = editedLine
 
     def writeFile(self):

@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QDialog,QFormLayout,QPushButton,QHBoxLayout,QVBoxLayout,QLabel,QLineEdit
+from PyQt5.QtWidgets import QDialog,QFormLayout,QPushButton,QHBoxLayout,QVBoxLayout,QLabel,QLineEdit,QScrollArea
 from PyQt5.QtWidgets import QGroupBox,QAction,QMenuBar,QSpacerItem,QSizePolicy,QMainWindow,QWidget
 from CreateActions import CreateAction
-from Parameter import Parameter,ParametersList
+from Parameter import Parameter,ModulsExtractor,Module,ModuleInstance
 
 class EditDialog(QMainWindow):
     def __init__(self,VFile):
@@ -12,10 +12,10 @@ class EditDialog(QMainWindow):
         self.height = 0
         self.title = "Verilog Parsing Tool"
         self.setWindowTitle(self.title)
+        self.setMinimumHeight(300)
+        self.setMinimumWidth(1200)
         self.verilogFile = VFile
-        self.parameterList = ParametersList(self.verilogFile.verilogParameters,
-                                self.verilogFile.parametersLineIndexes,
-                                self.verilogFile.commentsList,self)
+        self.moduleExtractor = ModulsExtractor(self)
         self.mainMenu = self.menuBar()
         self.fileMenu = self.mainMenu.addMenu('&File')
         self.create_Actions()
@@ -26,10 +26,79 @@ class EditDialog(QMainWindow):
         #self.closeFile = actions.create("&Open File",self,"Ctrl+T",'Close File')
         #self.closeDialog.triggered.connect(self.closeDialog)
         self.saveFile = actions.create("&Save File",self,"Ctrl+S",'Save File')
-        self.saveFile.triggered.connect(self.parameterList.saveAll)
+        self.saveFile.triggered.connect(self.moduleExtractor.saveAll)
         self.fileMenu.addAction(self.saveFile)
+        self.defaultFile = actions.create("&Defualt File",self,"Ctrl+D",'Default File')
+        self.defaultFile.triggered.connect(self.moduleExtractor.defaultAll)
+        self.fileMenu.addAction(self.defaultFile)
 
-    def setupParameterValueBox(self):
+    def uiSetup(self):
+        vboxInner = QVBoxLayout()
+        if self.verilogFile.isTestBench:
+            instacesList =  self.moduleExtractor.getInstanceList()
+            for instance in instacesList:
+                self.setupParameterCommentsBox(instance)
+                self.setupParameterValueBox(instance)
+                hbox = QHBoxLayout()
+                hbox.addWidget(self.valuesGroupBox)
+                hbox.addWidget(self.commentsGroupBox)
+                instanceGroupBox = QGroupBox("Instance "+instance.instanceName+" Of Module "+instance.moduleName)
+                instanceGroupBox.setLayout(hbox)
+                vboxInner.addWidget(instanceGroupBox)
+            gruopBoxString = "Test Bench " + self.verilogFile.moduleName 
+        else:
+            module = self.moduleExtractor.getModule()
+            self.setupParameterCommentsBox(module)
+            self.setupParameterValueBox(module)    
+            hbox = QHBoxLayout()
+            hbox.addWidget(self.valuesGroupBox)
+            hbox.addWidget(self.commentsGroupBox)
+            vboxInner.addLayout(hbox)
+            gruopBoxString = "Parameter List Of Module " + self.verilogFile.moduleName
+        outerGroupBox = QGroupBox(gruopBoxString)
+        #group box have outer layout
+        widget = QWidget()
+        widget.setLayout(vboxInner)
+        scrollArea = QScrollArea()
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setWidget(widget)
+        vbox = QVBoxLayout()
+        vbox.addWidget(scrollArea)
+        outerGroupBox.setLayout(vbox)
+        #vbox to be set as the main layout 
+        vBoxOuter = QVBoxLayout()
+        vBoxOuter.addWidget(outerGroupBox)
+        #saveAll button and defaultAll button in innerLayout
+        vBoxOuter.addWidget(self.moduleExtractor.defaultAllButton)
+        vBoxOuter.addWidget(self.moduleExtractor.saveAllButton)
+        widget = QWidget()
+        widget.setLayout(vBoxOuter)
+        self.setCentralWidget(widget)
+    
+    def setupParameterCommentsBox(self,module):
+        self.commentsGroupBox = QGroupBox("Parameters Comments")
+        commentsButtonsHBox = QHBoxLayout()
+        commentsVBox = QVBoxLayout()
+        commentsFormsHBox = QHBoxLayout()
+        commentSaveForm = QFormLayout()
+        commentEditForm = QFormLayout()
+        for parameter in module.parameterList:
+            parameter.commentLineEdit.setMinimumWidth(300)
+            commentEditForm.addRow(parameter.editCommentButton,parameter.commentLineEdit)
+            commentSaveForm.addRow(parameter.saveCommentButton,parameter.defaulfCommentButton)
+        #add savaAllCommentsButton and DefaultAllCommentsButtn
+        commentsButtonsHBox.addWidget(module.editAllCommentsButton)
+        commentsButtonsHBox.addWidget(module.saveAllCommentsButton)
+        commentsButtonsHBox.addWidget(module.defaultAllCommentButton)
+        #add comments Forms to HBox
+        commentsFormsHBox.addLayout(commentEditForm)
+        commentsFormsHBox.addLayout(commentSaveForm)
+        commentsVBox.addLayout(commentsFormsHBox)
+        commentsVBox.addLayout(commentsButtonsHBox)
+        self.commentsGroupBox.setLayout(commentsVBox)
+
+
+    def setupParameterValueBox(self,module):
         self.valuesGroupBox = QGroupBox("Parameters Value")
         valuesButtonsHBox = QHBoxLayout()
         valuesVBox = QVBoxLayout()
@@ -37,75 +106,16 @@ class EditDialog(QMainWindow):
         labelAndInputForm = QFormLayout()
         SaveButtonForm = QFormLayout()
         #the parameters inputs and save buttons
-        for parameter in self.parameterList.getList():
+        for parameter in module.parameterList:
+            parameter.PlineEdit.setMinimumWidth(150)
             labelAndInputForm.addRow(parameter.Plabel,parameter.PlineEdit)
-            SaveButtonForm.addRow(parameter.saveButton,parameter.defaultbutton)
-            
+            SaveButtonForm.addRow(parameter.saveButton,parameter.defaultbutton)   
         #add savaAllValuesButton and DefaultAllValuesButton
-        valuesButtonsHBox.addWidget(self.parameterList.saveAllValueButton)
-        valuesButtonsHBox.addWidget(self.parameterList.defaultAllValueButton)
-        
+        valuesButtonsHBox.addWidget(module.saveAllValueButton)
+        valuesButtonsHBox.addWidget(module.defaultAllValueButton)
         #add Values Forms to H Box
         valuesFormsHBox.addLayout(labelAndInputForm)
         valuesFormsHBox.addLayout(SaveButtonForm)
-
         valuesVBox.addLayout(valuesFormsHBox)
         valuesVBox.addLayout(valuesButtonsHBox)
-       
         self.valuesGroupBox.setLayout(valuesVBox)
-
-    
-    def setupParameterCommentsBox(self):
-        self.commentsGroupBox = QGroupBox("Parameters Comments")
-        commentsButtonsHBox = QHBoxLayout()
-        commentsVBox = QVBoxLayout()
-        commentsFormsHBox = QHBoxLayout()
-        commentSaveForm = QFormLayout()
-        commentEditForm = QFormLayout()
-        for parameter in self.parameterList.getList():
-            commentEditForm.addRow(parameter.commentLineEdit,parameter.editCommentButton)
-            commentSaveForm.addRow(parameter.saveCommentButton,parameter.defaulfCommentButton)
-        #add savaAllCommentsButton and DefaultAllCommentsButtn
-        commentsButtonsHBox.addWidget(self.parameterList.editAllCommentsButton)
-        commentsButtonsHBox.addWidget(self.parameterList.saveAllCommentsButton)
-        commentsButtonsHBox.addWidget(self.parameterList.defaultAllCommentButton)
-
-         #add comments Forms to HBox
-        commentsFormsHBox.addLayout(commentEditForm)
-        commentsFormsHBox.addLayout(commentSaveForm)
-
-        commentsVBox.addLayout(commentsFormsHBox)
-        commentsVBox.addLayout(commentsButtonsHBox)
-        self.commentsGroupBox.setLayout(commentsVBox)
-
-    def uiSetup(self):
-        self.setupParameterCommentsBox()
-        self.setupParameterValueBox()
-        if self.verilogFile.isTestBench:
-            gruopBoxString = "Test Bench " + self.verilogFile.moduleName
-        else:
-            gruopBoxString = "Parameter List Of Module " + self.verilogFile.moduleName
-        outerGroupBox = QGroupBox(gruopBoxString)
-        #saveAll button and defaultAll button in innerLayout
-        vboxInner = QVBoxLayout()
-        vboxInner.addWidget(self.parameterList.defaultAllButton)
-        vboxInner.addWidget(self.parameterList.saveAllButton)
-        #out vertical layout have 1 horizontal 1 one vertical
-        hBoxOuter = QHBoxLayout()
-        hBoxOuter.addWidget(self.valuesGroupBox)
-        hBoxOuter.addWidget(self.commentsGroupBox)
-        vboxOuter = QVBoxLayout()
-        vboxOuter.addLayout(hBoxOuter)
-        vboxOuter.addLayout(vboxInner)
-        #group box have outer layout
-        outerGroupBox.setLayout(vboxOuter)
-        #vbox to be set as the main layout 
-        vbox = QVBoxLayout()
-        #verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        #vbox.addItem(verticalSpacer)
-        vbox.addWidget(outerGroupBox)
-        widget = QWidget()
-        widget.setLayout(vbox)
-        self.setCentralWidget(widget)
-
-    
