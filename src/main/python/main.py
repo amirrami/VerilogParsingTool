@@ -1,11 +1,10 @@
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from PyQt5.QtWidgets import QApplication
 from mainWindow import mainWindow
 
 import sys
 
 if __name__ == '__main__':
-    appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
+    app = QApplication(sys.argv)       
     mainWindow = mainWindow()
     mainWindow.show()
-    exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-    sys.exit(exit_code)
+    sys.exit(app.exec())
