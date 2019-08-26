@@ -1,6 +1,6 @@
 module addsub();
 
-parameter Num_inp = 222; //number of the cell_units in one row or column  Num_inp x Num_inp MMU 
+parameter Num_inp = 256; //number of the cell_units in one row or column  Num_inp x Num_inp MMU 
 
 parameter number_of_calc = 4; // number of matrix multiplication operation in the testbench
 
