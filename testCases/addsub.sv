@@ -1,12 +1,10 @@
+
+`include "../../lpddr5_channel_agt/lpddr5_agt_params_pkg.sv"
+
 module addsub();
 
-parameter Num_inp = 256; //number of the cell_units in one row or column  Num_inp x Num_inp MMU 
-
-parameter number_of_calc = 4; // number of matrix multiplication operation in the testbench
-
 parameter data_size = 15;  //data size of module
-
-parameter bridge = 25; // bridge for data science
+parameter bridge = 25; // bridge for data 
 
 	always @ (posedge clk)
 	begin
@@ -17,10 +15,10 @@ parameter bridge = 25; // bridge for data science
 	end
 
 
-
 MMU_gen #(
-      .tAAD(Num_inp),  //A
-      .tADR(19) //A
+      . data_size (`DATA_SIZE),
+      .Port(Num_inp),
+      .head(bridge)
 )
 Botton(
 	.load(load),
@@ -28,31 +26,33 @@ Botton(
 );
 
 MMU_gen #(
-      .tAAD(data_size),  //A
-      .tADR(19) //A
+      . data_size (`DATA_SIZE),
+      .CaC(number_of_calc)
 )
-Botton(
+MMU1(
 	.load(load),
         .clk(clk)
 );
 
-MMU_gen #(
-	.tAAD(data_size), //A
-	.tADR(18)
+MSO #(
+      . data_size (Num_inp)
+      .BRIGDE(bridge) 
 )
-Top(
+MSoTop(
 	.load(load),
         .clk(clk)
 );
 
-MMU_gen #(
-	.tAAD(data_size), //A
-	.tADR(18)
+ASD #(
+      . data_size (`DATA_SIZE)
+      .HRS(333)
 )
-Top(
+RightPort(
 	.load(load),
         .clk(clk)
 );
+
+
 
 
 endmodule

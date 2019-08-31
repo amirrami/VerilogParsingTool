@@ -34,8 +34,8 @@ class EditDialog(QMainWindow):
 
     def uiSetup(self):
         vboxInner = QVBoxLayout()
-        if self.verilogFile.isTestBench:
-            instacesList =  self.moduleExtractor.getInstanceList()
+        if self.verilogFile.moduleType == "testBench":
+            instacesList =  self.verilogFile.testBench.instanceList
             for instance in instacesList:
                 self.setupParameterCommentsBox(instance)
                 self.setupParameterValueBox(instance)
@@ -45,16 +45,16 @@ class EditDialog(QMainWindow):
                 instanceGroupBox = QGroupBox("Instance "+instance.instanceName+" Of Module "+instance.moduleName)
                 instanceGroupBox.setLayout(hbox)
                 vboxInner.addWidget(instanceGroupBox)
-            gruopBoxString = "Test Bench " + self.verilogFile.moduleName 
-        else:
-            module = self.moduleExtractor.getModule()
+            gruopBoxString = "Test Bench " + self.verilogFile.testBench.TestBenchName 
+        elif self.verilogFile.moduleType == "module":
+            module = self.verilogFile.Module
             self.setupParameterCommentsBox(module)
             self.setupParameterValueBox(module)    
             hbox = QHBoxLayout()
             hbox.addWidget(self.valuesGroupBox)
             hbox.addWidget(self.commentsGroupBox)
             vboxInner.addLayout(hbox)
-            gruopBoxString = "Parameter List Of Module " + self.verilogFile.moduleName
+            gruopBoxString = "Parameter List Of Module " + self.verilogFile.Module.moduleName
         outerGroupBox = QGroupBox(gruopBoxString)
         #group box have outer layout
         widget = QWidget()
