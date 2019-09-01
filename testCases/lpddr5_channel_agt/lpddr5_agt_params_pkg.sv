@@ -6,4 +6,4 @@ parameter data_size = 15;  //data size of module
 
 parameter bridge = 25; // bridge for data science
 
-`define DATA_SIZE  10 //data size  = 20
+`define DATA_SIZE  10 //data size  = 30
