@@ -4,14 +4,16 @@ from EditDialog import EditDialog,Parameter
 import re,os
 
 class VerilogFile():
-    def __init__(self,file):
+    def __init__(self,file,mainWindow):
         self.VFile = file
         self.includeFile = ""
         self.verilogLines = []
         self.verilogText = ""
-        self.fileEdited = False
-        self.includeFileEdited = False
+        self._fileEdited = False
+        self._includeFileEdited = False
+        self.parent = mainWindow
         self.readAndParse()
+
 
     def readAndParse(self):
         self.verilogLines = self.VFile.readlines()
@@ -37,12 +39,12 @@ class VerilogFile():
     def ChangeParameter(self,parameter):
         if parameter.currentValue != parameter.newValue:
             if parameter.isInInclude:
-                self.includeFileEdited = True
+                self._includeFileEdited = True
                 editedLine = self.includeFileLines[parameter.lineIndex]
                 editedLine = editedLine.replace(parameter.currentValue,parameter.newValue,1)
                 self.includeFileLines[parameter.lineIndex] = editedLine
             else:
-                self.fileEdited = True
+                self._fileEdited = True
                 editedLine = self.verilogLines[parameter.lineIndex]
                 editedLine = editedLine.replace(parameter.currentValue,parameter.newValue,1)
                 self.verilogLines[parameter.lineIndex] = editedLine
@@ -72,41 +74,44 @@ class VerilogFile():
 
 
     def ChangeComment(self,parameter):
-        if parameter.isInInclude:
-            editedLine = self.includeFileLines[parameter.lineIndex]
-        else:
-            editedLine = self.verilogLines[parameter.lineIndex]
-        if parameter.newComment == "" and parameter.currentComment == "":
-            match = re.search(r'//',editedLine)
-            if match:
-                editedLine = editedLine.replace("//","",1)
-        elif parameter.newComment == "":
-            editedLine = re.sub(r'\s*(//*)(\s*).*',"",editedLine,1)
-        elif parameter.currentComment == "":
-            match = re.search(r'//',editedLine)
-            if match:
-                if parameter.newComment == "":
-                    editedLine = editedLine.replace("//","",1)
-                else:
-                    editedLine = editedLine.replace("//","//"+parameter.newComment,1)
+        if parameter.newComment != parameter.currentComment:
+            if parameter.isInInclude:
+                self._includeFileEdited = True
+                editedLine = self.includeFileLines[parameter.lineIndex]
             else:
-                editedLine = editedLine.replace("\n"," //"+parameter.newComment+"\n",1)
-        else:
-            editedLine = re.sub(parameter.currentComment,parameter.newComment,editedLine,1)
-        if parameter.isInInclude:
-            self.includeFileLines[parameter.lineIndex] = editedLine
-        else:
-            self.verilogLines[parameter.lineIndex] = editedLine
-        self.checkParameterSimilarity(parameter)
+                self._fileEdited = True
+                editedLine = self.verilogLines[parameter.lineIndex]
+            if parameter.newComment == "" and parameter.currentComment == "":
+                match = re.search(r'//',editedLine)
+                if match:
+                    editedLine = editedLine.replace("//","",1)
+            elif parameter.newComment == "":
+                editedLine = re.sub(r'\s*(//*)(\s*).*',"",editedLine,1)
+            elif parameter.currentComment == "":
+                match = re.search(r'//',editedLine)
+                if match:
+                    if parameter.newComment == "":
+                        editedLine = editedLine.replace("//","",1)
+                    else:
+                        editedLine = editedLine.replace("//","//"+parameter.newComment,1)
+                else:
+                    editedLine = editedLine.replace("\n"," //"+parameter.newComment+"\n",1)
+            else:
+                editedLine = re.sub(parameter.currentComment,parameter.newComment,editedLine,1)
+            if parameter.isInInclude:
+                self.includeFileLines[parameter.lineIndex] = editedLine
+            else:
+                self.verilogLines[parameter.lineIndex] = editedLine
+            self.checkParameterSimilarity(parameter)
 
     def writeFile(self):
-        if self.includeFile and self.includeFileEdited:
-            self.includeFileEdited = False
+        if self.includeFile and self._includeFileEdited:
+            self._includeFileEdited = False
             self.includeFile = open(self.includeFile.name,'w')
             self.includeFile.writelines(self.includeFileLines)
             self.includeFile.flush()
-        if self.fileEdited:
-            self.fileEdited = False
+        if self._fileEdited:
+            self._fileEdited = False
             self.VFile = open(self.VFile.name,'w')
             self.VFile.writelines(self.verilogLines)
             self.VFile.flush()
@@ -125,6 +130,6 @@ class VerilogFile():
                 self.includeFileLines = self.includeFile.readlines()
                 self.parser.setIncludeFileLines(self.includeFileLines)
             except:
-                QMessageBox.information(self.fileEditDialog,"The Include File Is Not In The Path specified!!")
+                QMessageBox.information(self.parent,"Include File Not Found","The Include File Is Not In The Path specified!!")
             
         

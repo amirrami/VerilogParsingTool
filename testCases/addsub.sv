@@ -1,10 +1,10 @@
 
-`include "../../lpddr5_channel_agt/lpddr5_agt_params_pkg.sv"
+`include "./lpddr5_channel_agt/lpddr5_agt_params_pkg.sv"
 
 module addsub();
 
 parameter data_size = 15;  //data size of module
-parameter bridge = 25; // bridge for data 
+parameter bridge = 25; // bridge for data sr
 
 	always @ (posedge clk)
 	begin

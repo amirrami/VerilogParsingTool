@@ -6,11 +6,10 @@ class Parser():
         self.VerilogLines = lines
         self.verilogText = text
         self.moduleType = ""
+        self.includeFile = False
         
-
     def startParsing(self):
-        self.moduleNameParser()
-        
+        self.moduleNameParser()  
 
     def moduleNameParser(self):
         testBenchMatch = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]*\s*[)]*;',self.verilogText)
@@ -49,7 +48,6 @@ class Parser():
                 moduleParameterList.append(parameter)
         self.module.setParametersList(moduleParameterList)
                 
-    
     #test bench parser
     def TBParameterParser(self):
         listOfInstances = []
@@ -79,7 +77,7 @@ class Parser():
                                     commentFound = True
                                     param.setComment(matchComment.group(1))
                                 break
-                            elif re.search(r"[.]"+parameterLine[0]+"[ (]*"+parameterLine[1],self.VerilogLines[i]):
+                            elif re.search(r"[.][ ]*"+parameterLine[0]+"[ (]*"+parameterLine[1],self.VerilogLines[i]):
                                 index = i     
                     else:
                         for i in range(len(self.VerilogLines)):
@@ -94,10 +92,11 @@ class Parser():
                                     commentFound = True
                                     param.setComment(matchComment.group(1))
                                 break
-                            elif re.search(r"[.]"+parameterLine[0]+"[ (]*"+parameterLine[1],self.VerilogLines[i]):
+                            elif re.search(r"[.][ ]*"+parameterLine[0]+"[ (]*"+parameterLine[1],self.VerilogLines[i]):
                                 index = i   
                     if not valueFound:
-                        valueFound,listOfValues = self.parseIncludeFile(parameterLine[1])
+                        if self.includeFile:
+                            valueFound,listOfValues = self.parseIncludeFile(parameterLine[1])
                         if not valueFound:
                             param = Parameter(parameterLine[0])
                             param.setValue(parameterLine[1])
@@ -114,8 +113,6 @@ class Parser():
                 listOfInstances.append(Instance)
             self.testBench.setInstanceList(listOfInstances)
 
-        
- 
     def parseIncludeFile(self,parameterName):
         valueFound = False
         commentFound = False
