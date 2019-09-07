@@ -133,3 +133,33 @@ class VerilogFile():
                 QMessageBox.information(self.parent,"Include File Not Found","The Include File Is Not In The Path specified!!")
             
         
+    def changeMode(self,mode):
+        if mode.isDefinednew != mode.isDefinedcurrent:
+            if mode.lineIndex!=None and not mode.isDefinednew:
+                self.verilogLines.pop(mode.lineIndex)
+                self.changeLineIndexes(False,mode.lineIndex)
+                mode.lineIndex = None
+                self._fileEdited = True
+            elif mode.lineIndex == None:
+                self.verilogLines.insert(0,"`define "+mode.modeName + "\n")
+                self.changeLineIndexes(True,0)
+                mode.lineIndex = 0
+                self._fileEdited = True
+
+    def changeLineIndexes(self,isAdded,changedIndex):
+        if self.moduleType == "testBench":
+            for instance in self.testBench.instanceList:
+                for parameter in instance.parameterList:
+                    if isAdded:
+                        parameter.lineIndex +=1
+                    else:
+                        if parameter.lineIndex > changedIndex:
+                            parameter.lineIndex -=1
+            for mode in self.testBench.modesList:
+                if mode.lineIndex!=None:
+                    if isAdded:
+                        mode.lineIndex +=1
+                    else:
+                        if mode.lineIndex > changedIndex:
+                            mode.lineIndex -=1
+                

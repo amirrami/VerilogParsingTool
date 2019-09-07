@@ -50,3 +50,4 @@ class mainWindow(QMainWindow):
             else:
                 vfileObject = VerilogFile(VFile,self)
                 self.verilogFilesList.append(vfileObject)
+                self.close()

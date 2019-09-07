@@ -35,7 +35,7 @@ MMU1(
 );
 
 MSO #(
-      . data_size (Num_inp)
+      . data_size (Num_inp),
       .BRIGDE(bridge) 
 )
 MSoTop(
@@ -44,7 +44,7 @@ MSoTop(
 );
 
 ASD #(
-      . data_size (`DATA_SIZE)
+      . data_size (`DATA_SIZE),
       .HRS(333)
 )
 RightPort(

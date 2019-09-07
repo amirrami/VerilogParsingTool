@@ -1,5 +1,7 @@
 import re
-from Parameter import Parameter,Module,ModuleInstance,TestBench
+from Parameter import Parameter,Module,ModuleInstance,TestBench,Mode
+
+
 
 class Parser():
     def __init__(self,lines,text):
@@ -9,7 +11,8 @@ class Parser():
         self.includeFile = False
         
     def startParsing(self):
-        self.moduleNameParser()  
+        self.moduleNameParser()
+        self.parseModes()
 
     def moduleNameParser(self):
         testBenchMatch = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]*\s*[)]*;',self.verilogText)
@@ -18,17 +21,23 @@ class Parser():
             self.moduleType = "testBench"
             self.TBParameterParser()
         else:
-            moduleTest = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]([\s\S]+)[)];',self.verilogText)
-            if moduleTest:
-                self.module = Module(moduleTest.group(1))
-                self.moduleType = "module"
-                self.moduleParameterParser()
+            testBenchWithHash = re.search(r"(?i)module\s+([a-zA-Z0-9_$]*)\s*#[(]\s*[)]\s*[(]\s*[)]\s*;",self.verilogText)
+            if testBenchWithHash:
+                self.testBench = TestBench(testBenchWithHash.group(1))
+                self.moduleType = "testBench"
+                self.TBParameterParser()
             else:
-                moduleTestWithHash = re.search(r"(?i)module\s+([a-zA-Z0-9_$]*)\s*#[(][\s\S]*[)]\s*[(]",self.verilogText)
-                if moduleTestWithHash:
-                    self.moduleType = "module"
+                moduleTest = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]([\s\S]+)[)];',self.verilogText)
+                if moduleTest:
                     self.module = Module(moduleTest.group(1))
+                    self.moduleType = "module"
                     self.moduleParameterParser()
+                else:
+                    moduleWithHash = re.search(r"(?i)module\s+([a-zA-Z0-9_$]*)\s*#[(][\s\S]*[)]\s*[(]",self.verilogText)
+                    if moduleWithHash:
+                        self.moduleType = "module"
+                        self.module = Module(moduleWithHash.group(1))
+                        self.moduleParameterParser()
     
     #normal module Parser
     def moduleParameterParser(self):
@@ -51,13 +60,16 @@ class Parser():
     #test bench parser
     def TBParameterParser(self):
         listOfInstances = []
-        intance = re.findall(r"([a-zA-Z0-9_$]+)\s*#\s*[(]([a-zA-Z0-9_$.,\/'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
+        intance = re.findall(r"([a-zA-Z0-9_$]+)\s*#\s*[(]([a-zA-Z0-9_$.,\/\"'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
         if intance:
             for i in range(len(intance)):
                 Instance = ModuleInstance(intance[i][2],intance[i][0])
                 intanceParameterList = []
-                #to find all parameter inside the "#"
-                parametersInsideHash = re.findall(r"[.]\s*([a-zA-Z0-9_$]+)\s*[(]\s*([`a-zA-Z0-9_$'.]+)\s*[)]\s*[,]?[\/\s]*([a-zA-Z0-9-_$!@#$%^&*()_+<>?{}' ]*)",intance[i][1])
+                # add space at the begin of parameters inside hash to conpensate error for the first parameter 
+                # which need to have a space
+                textInsideHash = " " + intance[i][1]
+                 #to find all parameter inside the "#"
+                parametersInsideHash = re.findall(r"\s*[^\/][.]\s*([a-zA-Z0-9_$]+)\s*[(]\s*([`a-zA-Z0-9_$'\".]+)\s*[)]\s*[,]?[ \/]*([^.\s)]*)",textInsideHash)
                 #parsing every parameter line
                 for parameterLine in parametersInsideHash:
                     valueFound = False
@@ -170,3 +182,34 @@ class Parser():
     def gettestBench(self):
         if self.moduleType == "testBench":
             return self.testBench
+
+    def parseModes(self):
+        modes = set()
+        modesList = []
+        #to detect all modes all across the file and put in set so its repeated
+        for line in self.VerilogLines:
+            line =  " " + line
+            modeMatch = re.search(r"[^\/]\s*(`ifdef|`ifndef|`elsif)\s*([a-zA-Z0-9_$'`\"\/,.]+)",line)
+            if modeMatch:
+                modes.add(modeMatch.group(2))
+        for mode in modes:
+            testBenchMode = Mode(mode)
+            length = len(self.VerilogLines)
+            for i in range(length):
+                line = " " + self.VerilogLines[i]
+                modeDefined = re.search(r"[^\/]\s*`(?i)define\s+"+mode,line)
+                if modeDefined:
+                    testBenchMode.setIsDefined(True)
+                    testBenchMode.setlineIndex(i)
+                    break
+            modesList.append(testBenchMode)
+        self.testBench.setModesList(modesList)
+
+            
+        
+
+    def test(self):
+        match = re.findall(r"`ifdef([a-zA-Z0-9_$.,\/\"'`)(\s]*)`endif\s*#\s*[(]([a-zA-Z0-9_$.,\/\"'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
+        if match:
+            for a in match:
+                print(a[0].split("\n"))
