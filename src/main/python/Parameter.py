@@ -114,10 +114,17 @@ class Module():
         for parameter in self.parameterList:
             parameter.SavedefaultComment()
     
+    def setGroupBox(self,groupbox):
+        self.groupBox = groupbox
+    
 class ModuleInstance(Module):
     def __init__(self,name,moduleName):
         super().__init__(moduleName)
         self.instanceName = name
+        self.falseName = ""
+    
+    def setFalseName(self,falseName):
+        self.falseName = falseName
 
 class TestBench():
     def __init__(self,name):
@@ -164,7 +171,6 @@ class TestBench():
         for mode in self.modesList:
             mode.unCheckMode()
         
-
 
 class ModulsExtractor():
     def __init__(self,dialog):
@@ -216,6 +222,8 @@ class ModulsExtractor():
         self.RunButton.setMinimumWidth(600)
         self.saveAllButton.clicked.connect(self.saveAll)
         self.defaultAllButton.clicked.connect(self.defaultAll)
+        self.compileButton.clicked.connect(self.dialog.verilogFile.compileFile)
+        self.RunButton.clicked.connect(self.dialog.verilogFile.runFile)
 
     def saveAll(self):
         if self.dialog.verilogFile.moduleType == "testBench":

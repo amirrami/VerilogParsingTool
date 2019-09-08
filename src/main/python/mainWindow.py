@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow,QVBoxLayout,QHBoxLayout,QGroupBox,QPushB
 from PyQt5.QtWidgets import QMessageBox,QLabel,QLineEdit
 from PyQt5.QtWidgets import QFileDialog,QTextEdit,QFormLayout
 from PyQt5 import QtCore,QtGui
-import sys
+import sys,os
 from fileMenu import FileMenu
 from EditDialog import EditDialog
 from VerilogFile import VerilogFile
@@ -39,15 +39,18 @@ class mainWindow(QMainWindow):
 
 
     def file_open(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.sv)", options=options)
-        if fileName:
+        #options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        #fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.sv)", options=options)
+        #if fileName:
             try:
-                VFile = open(fileName,'r')
+                VFile = open("/home/amir/Downloads/work/MentorIntern/VerilogParsingTool/testCases/lpddr5_tb.sv",'r')
             except IOError:
                 QMessageBox.warning(self, 'Can Not Open File', "Please Make Sure The the File Is Not Corrupted!!")
             else:
+                dir_path = os.path.dirname(os.path.realpath(VFile.name))
+                if dir_path != "":
+                    os.chdir(dir_path)
                 vfileObject = VerilogFile(VFile,self)
                 self.verilogFilesList.append(vfileObject)
                 self.close()

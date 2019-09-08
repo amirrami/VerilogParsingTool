@@ -12,19 +12,24 @@ class Parser():
         
     def startParsing(self):
         self.moduleNameParser()
-        self.parseModes()
+
+    def setVerilogLines(self,lines):
+        self.VerilogLines = lines
+        
 
     def moduleNameParser(self):
         testBenchMatch = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]*\s*[)]*;',self.verilogText)
         if testBenchMatch:
             self.testBench = TestBench(testBenchMatch.group(1))
             self.moduleType = "testBench"
+            self.parseModes()
             self.TBParameterParser()
         else:
             testBenchWithHash = re.search(r"(?i)module\s+([a-zA-Z0-9_$]*)\s*#[(]\s*[)]\s*[(]\s*[)]\s*;",self.verilogText)
             if testBenchWithHash:
                 self.testBench = TestBench(testBenchWithHash.group(1))
                 self.moduleType = "testBench"
+                self.parseModes()
                 self.TBParameterParser()
             else:
                 moduleTest = re.search(r'(?i)module\s+([a-zA-Z0-9_$]*)\s*[(]([\s\S]+)[)];',self.verilogText)
@@ -60,14 +65,19 @@ class Parser():
     #test bench parser
     def TBParameterParser(self):
         listOfInstances = []
-        intance = re.findall(r"([a-zA-Z0-9_$]+)\s*#\s*[(]([a-zA-Z0-9_$.,\/\"'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
+        intance = re.findall(r"((`ifdef|`ifndef)[a-zA-Z0-9_$.,\/\"'`)(\s]*`endif|[a-zA-Z0-9_$]+)\s*#\s*[(]([a-zA-Z0-9_$.,\/\"'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
         if intance:
             for i in range(len(intance)):
-                Instance = ModuleInstance(intance[i][2],intance[i][0])
+                if re.search(r"(`ifdef|`ifndef)",intance[i][0]):
+                    moduleName = self.instanceNameCorrection(intance[i][0])
+                    Instance = ModuleInstance(intance[i][3],moduleName)
+                    Instance.setFalseName(intance[i][0])
+                else:
+                    Instance = ModuleInstance(intance[i][3],intance[i][0])
                 intanceParameterList = []
                 # add space at the begin of parameters inside hash to conpensate error for the first parameter 
                 # which need to have a space
-                textInsideHash = " " + intance[i][1]
+                textInsideHash = " " + intance[i][2]
                  #to find all parameter inside the "#"
                 parametersInsideHash = re.findall(r"\s*[^\/][.]\s*([a-zA-Z0-9_$]+)\s*[(]\s*([`a-zA-Z0-9_$'\".]+)\s*[)]\s*[,]?[ \/]*([^.\s)]*)",textInsideHash)
                 #parsing every parameter line
@@ -132,7 +142,7 @@ class Parser():
         if re.search(r"[`]",parameterName):
             parameter = re.search(r"[`][ ]*([a-zA-Z0-9_$]*)",parameterName)
             for i in range(len(self.includeFileLines)):
-                defineMatch = re.search(r"[`](?i)define[ ]+"+parameter.group(1)+"[ ]+([a-zA-Z0-9_']+)",self.includeFileLines[i])
+                defineMatch = re.search(r"[`](?i)define[ ]+"+parameter.group(1)+"[ ]+([a-zA-Z0-9_'\"]+)",self.includeFileLines[i])
                 if defineMatch:
                     valueFound = True
                     listOfValues.append(defineMatch.group(1))
@@ -208,8 +218,29 @@ class Parser():
             
         
 
-    def test(self):
-        match = re.findall(r"`ifdef([a-zA-Z0-9_$.,\/\"'`)(\s]*)`endif\s*#\s*[(]([a-zA-Z0-9_$.,\/\"'`)(\s]*)[)]\s*([a-zA-Z0-9_$]+)",self.verilogText)
-        if match:
-            for a in match:
-                print(a[0].split("\n"))
+    def instanceNameCorrection(self,falseName):
+        lines = falseName.split("\n")
+        isDefined = False
+        trueName = ""
+        for i in range(len(lines)):
+            ifdefMatch = re.search(r"(`ifdef|`ifndef|`elsif)\s*([a-zA-Z0-9_$]+)",lines[i])
+            elseMatch = re.search(r"`else",lines[i])
+            if ifdefMatch:
+                toSearchMode = ifdefMatch.group(2)
+                for mode in self.testBench.modesList:
+                    if mode.modeName == toSearchMode:
+                        if (ifdefMatch.group(1) == "`ifdef" or ifdefMatch.group(1) == "`elsif") and mode.isDefinednew:
+                            match = re.search(r"([a-zA-Z0-9_$]+)",lines[i+1])
+                            if match:
+                                trueName = match.group(1)
+                                isDefined = True
+                        elif ifdefMatch.group(1) == "`ifndef" and not mode.isDefinednew:
+                            match = re.search(r"([a-zA-Z0-9_$]+)",lines[i+1])
+                            if match:
+                                trueName = match.group(1)
+                                isDefined = True
+            elif elseMatch and not isDefined:
+                match = re.search(r"([a-zA-Z0-9_$]+)",lines[i+1])
+                if match:
+                    trueName = match.group(1)   
+        return trueName

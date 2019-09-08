@@ -72,6 +72,7 @@ class EditDialog(QMainWindow):
                 hbox.addWidget(self.commentsGroupBox)
                 instanceGroupBox = QGroupBox("Instance "+instance.instanceName+" Of Module "+instance.moduleName)
                 instanceGroupBox.setLayout(hbox)
+                instance.setGroupBox(instanceGroupBox)
                 vboxInner.addWidget(instanceGroupBox)
             gruopBoxString = "Test Bench " + self.verilogFile.testBench.TestBenchName 
         elif self.verilogFile.moduleType == "module":

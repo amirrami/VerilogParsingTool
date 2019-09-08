@@ -1,6 +1,5 @@
-`define VPS_FLOW
+`define BYTE_MODE
 `define lpddr5_tWCKDQI_rt
-`define lpddr5_tWCKDQO_rt
 //    
 //----------------------------------------------------------------------
 //                                                                     
@@ -322,7 +321,12 @@ module lpddr5_tp #(
 `ifdef APB3_FLOW	
   
   // Instantiation of Master module
-  apb_master #(.SLAVE_COUNT(1),
+`ifndef APB3_FLOW
+  	apb_master
+`else
+	apb_master_new
+`endif
+	#(.SLAVE_COUNT(2), //edited 2
                .ADDR_WIDTH(8),
                .WDATA_WIDTH(32),
                .RDATA_WIDTH(32),

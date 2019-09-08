@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMessageBox
 from verilogParser import Parser
 from EditDialog import EditDialog,Parameter
-import re,os
+import re,os,platform,sys
 
 class VerilogFile():
     def __init__(self,file,mainWindow):
@@ -117,20 +117,14 @@ class VerilogFile():
             self.VFile.flush()
     
     def openIncludeFile(self,includeFilePath):
-        dir_path = os.path.dirname(os.path.realpath(self.VFile.name))
         try:
             self.includeFile = open(includeFilePath,"r")
             self.includeFileLines = self.includeFile.readlines()
             self.parser.setIncludeFileLines(self.includeFileLines)
         except:
-            if dir_path != "":
-                os.chdir(dir_path)
-            try:
-                self.includeFile = open(includeFilePath,"r")
-                self.includeFileLines = self.includeFile.readlines()
-                self.parser.setIncludeFileLines(self.includeFileLines)
-            except:
-                QMessageBox.information(self.parent,"Include File Not Found","The Include File Is Not In The Path specified!!")
+            QMessageBox.information(self.parent,"Include File Not Found","The Include File Is Not In The Path specified!!")
+        
+            
             
         
     def changeMode(self,mode):
@@ -145,6 +139,13 @@ class VerilogFile():
                 self.changeLineIndexes(True,0)
                 mode.lineIndex = 0
                 self._fileEdited = True
+            ##to change instance module if its name contain a ifdef condition
+            self.parser.setVerilogLines(self.verilogLines)
+            for instance in self.testBench.instanceList:
+                if instance.falseName:
+                    trueName = self.parser.instanceNameCorrection(instance.falseName)
+                    instance.moduleName = trueName
+                    instance.groupBox.setTitle("Instance "+instance.instanceName+" Of Module "+instance.moduleName)
 
     def changeLineIndexes(self,isAdded,changedIndex):
         if self.moduleType == "testBench":
@@ -162,4 +163,32 @@ class VerilogFile():
                     else:
                         if mode.lineIndex > changedIndex:
                             mode.lineIndex -=1
-                
+
+
+
+    def linux_distribution(self):
+        try:
+            return platform.linux_distribution()
+        except:
+            return "N/A"
+
+    def compileFile(self):
+        if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
+            compileCommand = "vlog "
+            myCmd = os.popen('ls *.v *.sv').read().split("\n")
+            for command in myCmd:
+                compileCommand += command+ " "
+            print(compileCommand)
+            os.system(compileCommand)
+
+        #print(platform.system())
+        #print(platform.release())
+        #print(str(platform.dist()[0]))
+        #os.system("gnome-terminal -e 'bash -c \"subl *.v *.sv;ls *.v *.sv; bash\" '")
+
+    def runFile(self):
+        if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
+            runCommand = "vsim work." +os.path.basename(self.VFile.name)
+            print(runCommand)
+            os.system(runCommand)
+        
