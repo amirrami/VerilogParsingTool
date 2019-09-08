@@ -173,22 +173,20 @@ class VerilogFile():
             return "N/A"
 
     def compileFile(self):
+        compileCommand = "vlog "
+        files = ""
         if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
-            compileCommand = "vlog "
-            myCmd = os.popen('ls *.v *.sv').read().split("\n")
-            for command in myCmd:
-                compileCommand += command+ " "
-            print(compileCommand)
-            os.system(compileCommand)
+            files = os.popen('ls *.v *.sv').read().split("\n")
+        elif platform.system() == "Windows":
+            files = os.popen('dir /b *.v *.sv').read().split("\n")
+        for file in files:
+            compileCommand += file+ " "
+        print(compileCommand)
+        os.system(compileCommand)
 
-        #print(platform.system())
-        #print(platform.release())
-        #print(str(platform.dist()[0]))
-        #os.system("gnome-terminal -e 'bash -c \"subl *.v *.sv;ls *.v *.sv; bash\" '")
 
     def runFile(self):
-        if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
-            runCommand = "vsim work." +os.path.basename(self.VFile.name)
-            print(runCommand)
-            os.system(runCommand)
+        runCommand = "vsim work." +os.path.basename(self.VFile.name)
+        print(runCommand)
+        os.system(runCommand)
         
