@@ -79,7 +79,7 @@ class Parser():
                 # which need to have a space
                 textInsideHash = " " + intance[i][2]
                  #to find all parameter inside the "#"
-                parametersInsideHash = re.findall(r"\s*[^\/][.]\s*([a-zA-Z0-9_$]+)\s*[(]\s*([`a-zA-Z0-9_$'\".]+)\s*[)]\s*[,]?[ \/]*([^.\s)]*)",textInsideHash)
+                parametersInsideHash = re.findall(r"\s*[^\/][.]\s*([a-zA-Z0-9_$]+)\s*[(]\s*([`a-zA-Z0-9_$'\".]+)\s*[)]\s*[,]?[ \/]*([a-zA-Z0-9_$'`\"\/, ]*)",textInsideHash)
                 #parsing every parameter line
                 for parameterLine in parametersInsideHash:
                     valueFound = False

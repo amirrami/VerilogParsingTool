@@ -37,14 +37,14 @@ class mainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
 
-
     def file_open(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.sv)", options=options)
-        if fileName:
+        #options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        #fileName, _ = QFileDialog.getOpenFileName(self,"Verilog file", "","Verilog Files (*.v *.sv)", options=options)
+        #if fileName:
             try:
-                VFile = open(fileName,'r')
+                VFile = open("/home/amir/Downloads/work/MentorIntern/VerilogParsingTool/testCases/lpddr5_tb.sv",'r')
+                #VFile = open(fileName,"r")
             except IOError:
                 QMessageBox.warning(self, 'Can Not Open File', "Please Make Sure The the File Is Not Corrupted!!")
             else:

@@ -173,6 +173,9 @@ class VerilogFile():
             return "N/A"
 
     def compileFile(self):
+        dir_path = os.path.dirname(os.path.realpath(self.VFile.name))
+        if dir_path != "":
+            os.chdir(dir_path)
         compileCommand = "vlog "
         files = ""
         if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
@@ -186,6 +189,9 @@ class VerilogFile():
 
 
     def runFile(self):
+        dir_path = os.path.dirname(os.path.realpath(self.VFile.name))
+        if dir_path != "":
+            os.chdir(dir_path)
         runCommand = "vsim work." +os.path.basename(self.VFile.name)
         print(runCommand)
         os.system(runCommand)

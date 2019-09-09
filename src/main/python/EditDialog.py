@@ -2,29 +2,26 @@ from PyQt5.QtWidgets import QDialog,QFormLayout,QPushButton,QHBoxLayout,QVBoxLay
 from PyQt5.QtWidgets import QGroupBox,QAction,QMenuBar,QSpacerItem,QSizePolicy,QMainWindow,QWidget
 from CreateActions import CreateAction
 from Parameter import Parameter,ModulsExtractor,Module,ModuleInstance
+from optionsDialog import OptionsDialog
 
 class EditDialog(QMainWindow):
     def __init__(self,VFile):
         super().__init__()
-        self.left = 400
-        self.top = 200
-        self.width = 0
-        self.height = 0
-        #self.setMinimumHeight(300)
-        #self.setMinimumWidth(1200)
         self.showMaximized()
         self.verilogFile = VFile
         self.moduleExtractor = ModulsExtractor(self)
         self.mainMenu = self.menuBar()
         self.fileMenu = self.mainMenu.addMenu('&File')
-        self.create_Actions()
+        self.OptionsMenu = self.mainMenu.addMenu('&Options')
+        self.createFileMenuActions()
+        self.createOptionsMenuActions()
         self.uiSetup()
         if self.verilogFile.moduleType == "testBench":
             self.setWindowTitle("Test Bench "+self.verilogFile.testBench.TestBenchName)
         elif self.verilogFile.moduleType == "module":
             self.setWindowTitle("Module "+self.verilogFile.Module.moduleName)
         
-    def create_Actions(self):
+    def createFileMenuActions(self):
         actions = CreateAction()
         self.openFile = actions.create("&Open File",self,"Ctrl+O",'Open File')
         self.openFileAnotherWindow = actions.create("&Open File In New Window",self,"Ctrl+A",'Open File In New Window') 
@@ -43,7 +40,24 @@ class EditDialog(QMainWindow):
         self.fileMenu.addAction(self.defaultFile)
         self.fileMenu.addAction(self.closeDialog)
 
-        
+    def createOptionsMenuActions(self):
+        actions = CreateAction()
+        self.compileOptions = actions.create("&Compile Configurations",self,"",'Compile Configurations')
+        self.runOptions = actions.create("&Run Configurations",self,"",'Run Configurations')
+        self.compileOptions.triggered.connect(self.openCompileOptions)
+        self.runOptions.triggered.connect(self.openRunOptions)
+        self.OptionsMenu.addAction(self.compileOptions)
+        self.OptionsMenu.addAction(self.runOptions)
+
+    def openCompileOptions(self):
+        print("compile options")
+        self.optionDialog = OptionsDialog("Compile")
+        self.optionDialog.exec_()
+
+    def openRunOptions(self):
+        print("run options")
+        self.optionDialog = OptionsDialog("Run")
+        self.optionDialog.exec_()
 
     def uiSetup(self):
         vboxInner = QVBoxLayout()
