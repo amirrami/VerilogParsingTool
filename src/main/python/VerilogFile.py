@@ -184,7 +184,10 @@ class VerilogFile():
                 compileCommand += file+ " "
         compileCommand = compileCommand.rstrip()
         print(compileCommand)
-        os.system(compileCommand)
+        if platform.system() == "Windows":
+            os.system("start \"\" cmd /k \""+compileCommand)
+        else:
+            os.system(compileCommand)
 
 
     def runFile(self):
@@ -192,6 +195,8 @@ class VerilogFile():
         if dir_path != "":
             os.chdir(dir_path)
         runCommand = "vsim work." +os.path.basename(self.VFile.name)
-        print(runCommand)
-        os.system(runCommand)
+        if platform.system() == "Windows":
+            os.system("start \"\" cmd /k \""+runCommand)
+        else:
+            os.system(runCommand)
         
