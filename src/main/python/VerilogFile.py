@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QMessageBox
 from verilogParser import Parser
 from EditDialog import EditDialog,Parameter
-import re,os,platform,sys
+import re,platform,sys,subprocess,os
+
 
 class VerilogFile():
     def __init__(self,file,mainWindow):
@@ -177,13 +178,11 @@ class VerilogFile():
         if dir_path != "":
             os.chdir(dir_path)
         compileCommand = "vlog "
-        files = ""
-        if platform.system() == "Linux" and str(platform.dist()[0]) == "Ubuntu":
-            files = os.popen('ls *.v *.sv').read().split("\n")
-        elif platform.system() == "Windows":
-            files = os.popen('dir /b *.v *.sv').read().split("\n")
+        files = os.listdir()
         for file in files:
-            compileCommand += file+ " "
+            if file.endswith(".sv") or file.endswith(".v"):
+                compileCommand += file+ " "
+        compileCommand = compileCommand.rstrip()
         print(compileCommand)
         os.system(compileCommand)
 
